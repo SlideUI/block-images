@@ -1,58 +1,64 @@
 <script>
-  const base = "https://slideui.github.io/block-images";
-  const api = "https://api.github.com/repos/slideui/block-images/contents";
-  const gallery = document.getElementById("gallery");
-  const catSelect = document.getElementById("category");
-  const cache = {};
+const base = "https://slideui.github.io/block-images";
+const api = "https://api.github.com/repos/slideui/block-images/contents";
+const gallery = document.getElementById("gallery");
+const catSelect = document.getElementById("category");
+const cache = {};
 
-  async function loadCategories() {
-    const res = await fetch(api);
-    const data = await res.json();
-    const folders = data.filter(item => item.type === "dir").map(item => item.name);
-    catSelect.innerHTML = "";
-    folders.forEach(name => {
-      const opt = document.createElement("option");
-      opt.textContent = name;
-      catSelect.appendChild(opt);
-    });
-    catSelect.value = "404";
+async function loadCategories() {
+  const res = await fetch(api);
+  const data = await res.json();
+  const folders = data.filter(item => item.type === "dir").map(item => item.name);
+  catSelect.innerHTML = "";
+  folders.forEach(name => {
+    const opt = document.createElement("option");
+    opt.textContent = name;
+    catSelect.appendChild(opt);
+  });
+  catSelect.value = "404";
+}
+
+async function loadImages() {
+  const category = catSelect.value;
+  const device = document.getElementById("device").value;
+  const mode = document.getElementById("mode").value;
+  const key = `${category}-${device}-${mode}`;
+  gallery.innerHTML = "<p>Loading…</p>";
+
+  if (cache[key]) {
+    gallery.innerHTML = cache[key];
+    return;
   }
 
-  async function loadImages() {
-    const category = catSelect.value;
-    const device = document.getElementById("device").value;
-    const mode = document.getElementById("mode").value;
-    const key = `${category}-${device}-${mode}`;
-    gallery.innerHTML = "<p>Loading…</p>";
-
-    if (cache[key]) {
-      gallery.innerHTML = cache[key];
-      return;
-    }
-
-    const images = [];
-    for (let i = 1; i <= 400; i++) {
-      const filename = `${category} Blocks-${i}_result_result.webp`;
-      const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(filename)}`;
-      const res = await fetch(url, { method: "HEAD" });
-      if (res.ok) images.push(url);
-    }
-
-    const html = images
-      .map(src => `<img src="${src}" loading="lazy" alt="${category}" />`)
-      .join("");
-    cache[key] = html;
-    gallery.innerHTML = html || "No images found.";
+  // Fetch folder contents dynamically from GitHub
+  const encodedPath = `${encodeURIComponent(category)}/${device}/${mode}`;
+  const res = await fetch(`${api}/${encodedPath}`);
+  if (!res.ok) {
+    gallery.innerHTML = "<p>⚠️ No images found in this folder.</p>";
+    return;
   }
 
-  async function init() {
-    await loadCategories();
-    loadImages();
-  }
+  const files = await res.json();
+  const images = files
+    .filter(f => f.name.endsWith(".webp"))
+    .map(f => `${base}/${encodedPath}/${encodeURIComponent(f.name)}`);
 
-  document.getElementById("device").addEventListener("change", loadImages);
-  document.getElementById("mode").addEventListener("change", loadImages);
-  catSelect.addEventListener("change", loadImages);
+  const html = images.length
+    ? images.map(src => `<img src="${src}" loading="lazy" />`).join("")
+    : "<p>No images found.</p>";
 
-  init();
+  cache[key] = html;
+  gallery.innerHTML = html;
+}
+
+async function init() {
+  await loadCategories();
+  await loadImages();
+}
+
+document.getElementById("device").addEventListener("change", loadImages);
+document.getElementById("mode").addEventListener("change", loadImages);
+catSelect.addEventListener("change", loadImages);
+
+init();
 </script>
