@@ -1,170 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SlideUI Block Gallery</title>
-  <style>
-    body {
-      background-color: #0e0e0e;
-      color: white;
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const base = `${location.origin}/block-images`;
+    const categories = ["404"];
+    const catSelect = document.getElementById("category");
+    const deviceSelect = document.getElementById("device");
+    const modeSelect = document.getElementById("mode");
+    const gallery = document.getElementById("gallery");
+    const loading = document.getElementById("loading");
 
-    h1 {
-      font-size: 28px;
-      margin-top: 24px;
-      margin-bottom: 4px;
-      text-align: center;
-    }
+    categories.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.textContent = cat;
+      catSelect.appendChild(opt);
+    });
 
-    p.sub {
-      color: #9f9f9f;
-      font-size: 14px;
-      margin-top: 0;
-      margin-bottom: 24px;
-      text-align: center;
-    }
+    async function loadImages() {
+      const category = catSelect.value;
+      const device = deviceSelect.value;
+      const mode = modeSelect.value;
 
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      padding: 20px;
-      background: #111;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.4);
-      border-radius: 12px;
-    }
+      gallery.innerHTML = "";
+      loading.textContent = "Loading blocks…";
 
-    select {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: none;
-      background: #1a1a1a;
-      color: white;
-      font-size: 14px;
-    }
+      // Build all URLs first
+      const urls = Array.from({ length: 80 }, (_, i) => 
+        `${base}/${category}/${device}/${mode}/${category} Error Blocks-${i + 1}_result_result.webp`
+      );
 
-    select:hover {
-      background: #333;
-      cursor: pointer;
-    }
+      let foundCount = 0;
+      loading.textContent = "Scanning images…";
 
-    main {
-      width: 95%;
-      max-width: 1600px;
-      padding: 20px 0 80px;
-    }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 20px;
-      justify-items: center;
-    }
-
-    .gallery img {
-      width: 100%;
-      border-radius: 10px;
-      background: #1a1a1a;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-    }
-
-    .gallery img:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 25px rgba(255,255,255,0.08);
-    }
-
-    .loading {
-      text-align: center;
-      color: #999;
-      padding: 40px 0;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Visual Block Gallery</h1>
-  <p class="sub">Browse all exported SlideUI blocks directly from GitHub</p>
-
-  <header>
-    <select id="category"></select>
-    <select id="device">
-      <option>Desktop</option>
-      <option>Mobile</option>
-    </select>
-    <select id="mode">
-      <option>Dark Mode</option>
-      <option>Light Mode</option>
-      <option>Accent Mode</option>
-    </select>
-  </header>
-
-  <main>
-    <div id="gallery" class="gallery"></div>
-    <div id="loading" class="loading"></div>
-  </main>
-
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const base = `${location.origin}/block-images`;
-      const categories = ["404"];
-      const catSelect = document.getElementById("category");
-      const deviceSelect = document.getElementById("device");
-      const modeSelect = document.getElementById("mode");
-      const gallery = document.getElementById("gallery");
-      const loading = document.getElementById("loading");
-
-      // Populate category dropdown
-      categories.forEach(cat => {
-        const opt = document.createElement("option");
-        opt.textContent = cat;
-        catSelect.appendChild(opt);
+      // Parallel check — load images directly, skip HEAD requests
+      urls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+        img.loading = "lazy";
+        img.onerror = () => {}; // ignore missing files
+        img.onload = () => {
+          foundCount++;
+          gallery.appendChild(img);
+          loading.textContent = `Loaded ${foundCount} blocks…`;
+        };
       });
 
-      async function loadImages() {
-        const category = catSelect.value;
-        const device = deviceSelect.value;
-        const mode = modeSelect.value;
+      // Auto-clear loading text once some images have loaded
+      setTimeout(() => {
+        loading.textContent = foundCount
+          ? ""
+          : "No images found for this mode.";
+      }, 4000);
+    }
 
-        gallery.innerHTML = "";
-        loading.textContent = "Loading blocks…";
+    catSelect.addEventListener("change", loadImages);
+    deviceSelect.addEventListener("change", loadImages);
+    modeSelect.addEventListener("change", loadImages);
 
-        const images = [];
-        for (let i = 1; i <= 80; i++) {
-          const fileName = `${category} Error Blocks-${i}_result_result.webp`;
-          const url = `${base}/${category}/${device}/${mode}/${fileName}`;
-          const res = await fetch(url, { method: "HEAD" });
-          if (res.ok) images.push(url);
-        }
-
-        if (!images.length) {
-          gallery.innerHTML = "<p>No images found for this mode.</p>";
-          loading.textContent = "";
-          return;
-        }
-
-        gallery.innerHTML = images.map(src => `<img src="${src}" loading="lazy">`).join("");
-        loading.textContent = "";
-      }
-
-      catSelect.addEventListener("change", loadImages);
-      deviceSelect.addEventListener("change", loadImages);
-      modeSelect.addEventListener("change", loadImages);
-
-      catSelect.value = "404";
-      loadImages();
-    });
-  </script>
-</body>
-</html>
+    catSelect.value = "404";
+    loadImages();
+  });
+</script>
