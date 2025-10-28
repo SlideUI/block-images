@@ -1,172 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>404 Gallery</title>
-  <style>
-    body {
-      background-color: #0e0e0e;
-      color: white;
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-top: 24px;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-
-    p.sub {
-      color: #9f9f9f;
-      font-size: 14px;
-      margin-top: 0;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      padding: 20px;
-      background: #111;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.4);
-      border-radius: 12px;
-    }
-
-    select {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: none;
-      background: #1a1a1a;
-      color: white;
-      font-size: 14px;
-    }
-
-    select:hover {
-      background: #333;
-      cursor: pointer;
-    }
-
-    main {
-      width: 95%;
-      max-width: 1600px;
-      padding: 20px 0 80px;
-    }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-      justify-items: center;
-    }
-
-    .gallery img {
-      width: 100%;
-      border-radius: 10px;
-      background: #1a1a1a;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-    }
-
-    .gallery img:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 25px rgba(255,255,255,0.08);
-    }
-
-    .loading {
-      text-align: center;
-      color: #999;
-      padding: 40px 0;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <h1>404 Error Blocks</h1>
-  <p class="sub">Browse Desktop or Mobile modes directly from folders</p>
-
-  <header>
-    <select id="device">
-      <option>Desktop</option>
-      <option>Mobile</option>
-    </select>
-    <select id="mode">
-      <option>Dark Mode</option>
-      <option>Light Mode</option>
-      <option>Accent Mode</option>
-    </select>
-  </header>
-
-  <main>
-    <div id="gallery" class="gallery"></div>
-    <div id="loading" class="loading">Loading blocks…</div>
-  </main>
-
-  <script>
-    window.addEventListener("DOMContentLoaded", async () => {
-      // Detect base path automatically
-      const base = location.href.includes("block-images")
-        ? `${location.origin}/block-images`
-        : `${location.origin}`;
-
-      const gallery = document.getElementById("gallery");
-      const loading = document.getElementById("loading");
-      const deviceSelect = document.getElementById("device");
-      const modeSelect = document.getElementById("mode");
-
-      async function imageExists(url) {
-        try {
-          const res = await fetch(url, { method: "HEAD" });
-          return res.ok;
-        } catch {
-          return false;
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SlideUI Gallery</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #0e0e0e;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        padding: 20px;
+      }
+      select, button {
+        padding: 10px 16px;
+        border-radius: 6px;
+        border: none;
+        background: #1a1a1a;
+        color: white;
+        font-size: 14px;
+      }
+      button:hover, select:hover {
+        background: #333;
+        cursor: pointer;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+        width: 90%;
+        max-width: 1600px;
+      }
+      img {
+        width: 100%;
+        border-radius: 6px;
+        background: #1a1a1a;
+        transition: transform 0.2s ease;
+      }
+      img:hover {
+        transform: scale(1.02);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <select id="category"></select>
+      <select id="device">
+        <option>Desktop</option>
+        <option>Mobile</option>
+      </select>
+      <select id="mode">
+        <option>Dark Mode</option>
+        <option>Light Mode</option>
+        <option>Accent Mode</option>
+      </select>
+    </header>
+    <main class="gallery" id="gallery"></main>
+
+    <script>
+      const base = "https://slideui.github.io/block-images";
+      const gallery = document.getElementById("gallery");
+      const cache = {};
+
+      const categories = [
+        "404",
+        "About Us",
+        "Announcement Bar",
+        "Blog",
+        "CTA",
+        "Contact",
+        "Dashboard",
+        "Features",
+        "Footer",
+        "Gallery",
+        "Hero",
+        "Login",
+        "Navbar",
+        "Portfolio",
+        "Pricing",
+        "Stats",
+        "Team",
+        "Testimonials"
+      ];
+
+      const catSelect = document.getElementById("category");
+      categories.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+      });
 
       async function loadImages() {
-        const device = deviceSelect.value;
-        const mode = modeSelect.value;
-        const folder = `${base}/404/${device}/${encodeURIComponent(mode)}`;
-        const images = [];
+        const category = catSelect.value;
+        const device = document.getElementById("device").value;
+        const mode = document.getElementById("mode").value;
+        const key = `${category}-${device}-${mode}`;
+        gallery.innerHTML = "Loading…";
 
-        gallery.innerHTML = "";
-        loading.textContent = "Loading blocks…";
-
-        for (let i = 1; i <= 100; i++) {
-          const file = `404%20Error%20Blocks-${i}_result_result.webp`;
-          const url = `${folder}/${file}`;
-          if (await imageExists(url)) {
-            images.push(url);
-          }
-        }
-
-        if (images.length === 0) {
-          gallery.innerHTML = `<p>No images found.</p>`;
-          loading.textContent = "";
+        if (cache[key]) {
+          gallery.innerHTML = cache[key];
           return;
         }
 
-        gallery.innerHTML = images.map(src => `<img src="${src}" loading="lazy" alt="404 block">`).join("");
-        loading.textContent = "";
+        const images = [];
+        for (let i = 1; i <= 200; i++) {
+          const filename = `${category} Blocks-${i}_result.webp`;
+          const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(filename)}`;
+          const res = await fetch(url, { method: "HEAD" });
+          if (res.ok) images.push(url);
+        }
+
+        const html = images
+          .map(src => `<img src="${src}" loading="lazy" alt="${category}" />`)
+          .join("");
+        cache[key] = html;
+        gallery.innerHTML = html || "No images found.";
       }
 
-      deviceSelect.addEventListener("change", loadImages);
-      modeSelect.addEventListener("change", loadImages);
-
-      await loadImages(); // initial
-    });
-  </script>
-</body>
+      catSelect.value = "404";
+      loadImages();
+      catSelect.addEventListener("change", loadImages);
+      document.getElementById("device").addEventListener("change", loadImages);
+      document.getElementById("mode").addEventListener("change", loadImages);
+    </script>
+  </body>
 </html>
