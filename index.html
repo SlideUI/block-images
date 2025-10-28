@@ -9,8 +9,6 @@
     .glass { backdrop-filter: blur(12px); background: rgba(15,15,15,0.7); border: 1px solid rgba(255,255,255,0.1); }
     .spinner { width: 24px; height: 24px; border: 3px solid #333; border-top-color: #06b6d4; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .gallery img { @apply w-full rounded-xl shadow-lg transition-all duration-200; }
-    .gallery img:hover { @apply scale-105 shadow-2xl; }
   </style>
 </head>
 <body class="bg-gray-950 text-white min-h-screen flex flex-col items-center">
@@ -33,79 +31,65 @@
     <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     <div id="loading" class="flex items-center justify-center py-12 text-gray-400">
       <div class="spinner mr-3"></div>
-      <span>Loading manifest…</span>
+      <span>Loading blocks…</span>
     </div>
   </main>
 
   <script>
-    // CHANGE THIS LINE TO YOUR GITHUB USERNAME & REPO
-    const BASE = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/block-images';
-    // Example: 'https://cdn.jsdelivr.net/gh/johndoe/slideui@main/block-images'
+    // ✅ You don't need manifest.json — this loads directly from your Vercel project.
+    const BASE = `${location.origin}`; // e.g. https://block-images.vercel.app
+    const categories = ["404"]; // Add more later if needed
+    const catSel = document.getElementById("category");
+    const devSel = document.getElementById("device");
+    const modeSel = document.getElementById("mode");
+    const gallery = document.getElementById("gallery");
+    const loading = document.getElementById("loading");
 
-    const catSel = document.getElementById('category');
-    const devSel = document.getElementById('device');
-    const modeSel = document.getElementById('mode');
-    const gallery = document.getElementById('gallery');
-    const loading = document.getElementById('loading');
-    let manifest = null;
-
-    async function init() {
-      try {
-        const res = await fetch(`${BASE}/manifest.json`);
-        manifest = await res.json();
-
-        Object.keys(manifest).forEach(cat => {
-          const opt = new Option(cat, cat);
-          catSel.appendChild(opt);
-        });
-
-        catSel.value = '404';
-        loadImages();
-      } catch (e) {
-        loading.innerHTML = `<p class="text-red-400">Error: Could not load manifest.json<br>Did you upload it?</p>`;
-      }
-    }
+    categories.forEach(cat => catSel.add(new Option(cat, cat)));
 
     async function loadImages() {
       const cat = catSel.value;
       const dev = devSel.value;
       const mode = modeSel.value;
 
-      if (!manifest || !manifest[cat]?.[dev]?.[mode]) {
-        gallery.innerHTML = '<p class="col-span-full text-center text-gray-500">No blocks found.</p>';
-        loading.textContent = '';
+      gallery.innerHTML = "";
+      loading.style.display = "flex";
+
+      const images = [];
+      for (let i = 1; i <= 80; i++) {
+        const file = `${cat} Error Blocks-${i}_result_result.webp`;
+        const url = `${BASE}/${cat}/${dev}/${mode}/${file}`;
+        try {
+          const res = await fetch(url, { method: "HEAD" });
+          if (res.ok) images.push(url);
+        } catch (_) {}
+      }
+
+      if (images.length === 0) {
+        gallery.innerHTML = `<p class='col-span-full text-center text-gray-500'>No blocks found.</p>`;
+        loading.style.display = "none";
         return;
       }
 
-      const files = manifest[cat][dev][mode];
-      gallery.innerHTML = '';
-      loading.innerHTML = `<div class="spinner mr-3"></div><span>Loading ${files.length} blocks…</span>`;
-
       const fragment = document.createDocumentFragment();
-      let loaded = 0;
-
-      files.forEach(file => {
+      images.forEach(src => {
         const img = new Image();
-        img.loading = 'lazy';
-        img.className = 'w-full rounded-xl shadow-lg transition-transform hover:scale-105';
-        img.src = `${BASE}/${cat}/${dev}/${mode}/${file}`;
-        img.alt = `${cat} block`;
-
-        img.onload = () => {
-          loaded++;
-          if (loaded === files.length) loading.textContent = '';
-        };
+        img.src = src;
+        img.loading = "lazy";
+        img.className = "w-full rounded-xl shadow-lg transition-transform hover:scale-105";
         fragment.appendChild(img);
       });
 
       gallery.appendChild(fragment);
+      loading.style.display = "none";
     }
 
     catSel.onchange = loadImages;
     devSel.onchange = loadImages;
     modeSel.onchange = loadImages;
 
-    init();
+    catSel.value = "404";
+    loadImages();
   </script>
 </body>
 </html>
