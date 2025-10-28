@@ -67,8 +67,8 @@
 
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
       justify-items: center;
     }
 
@@ -124,10 +124,7 @@
 
       console.log("Using base:", base);
 
-      const categories = [
-        "404"
-      ]; // only load 404 for now while testing
-
+      const categories = ["404"];
       const catSelect = document.getElementById("category");
       const deviceSelect = document.getElementById("device");
       const modeSelect = document.getElementById("mode");
@@ -167,7 +164,7 @@
         }
 
         const images = [];
-        for (let i = 1; i <= 100; i++) {
+        for (let i = 1; i <= 80; i++) {
           const fileName = `${category} Error Blocks-${i}_result_result.webp`;
           const encoded = encodeURIComponent(fileName);
           const url = `${base}/${encodeURIComponent(category)}/${device}/${encodeURIComponent(mode)}/${encoded}`;
@@ -192,6 +189,7 @@
         loading.textContent = "";
       }
 
+      // Event listeners
       catSelect.addEventListener("change", loadImages);
       deviceSelect.addEventListener("change", loadImages);
       modeSelect.addEventListener("change", loadImages);
