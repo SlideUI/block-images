@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SlideUI Block Gallery</title>
+  <title>404 Block Gallery</title>
   <style>
     body {
       background-color: #0e0e0e;
@@ -18,16 +18,7 @@
 
     h1 {
       font-size: 28px;
-      margin-top: 24px;
-      margin-bottom: 4px;
-      text-align: center;
-    }
-
-    p.sub {
-      color: #9f9f9f;
-      font-size: 14px;
-      margin-top: 0;
-      margin-bottom: 24px;
+      margin: 24px 0 10px;
       text-align: center;
     }
 
@@ -45,18 +36,19 @@
       border-radius: 12px;
     }
 
-    select {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: none;
+    button {
       background: #1a1a1a;
+      border: none;
+      border-radius: 6px;
       color: white;
+      padding: 10px 18px;
       font-size: 14px;
+      cursor: pointer;
     }
 
-    select:hover {
+    button.active {
       background: #333;
-      cursor: pointer;
+      font-weight: 600;
     }
 
     main {
@@ -94,83 +86,40 @@
   </style>
 </head>
 <body>
-  <h1>Visual Block Gallery</h1>
-  <p class="sub">Browse all exported SlideUI blocks directly from GitHub</p>
+  <h1>404 Error Blocks</h1>
 
   <header>
-    <select id="category"></select>
-    <select id="device">
-      <option>Desktop</option>
-      <option>Mobile</option>
-    </select>
-    <select id="mode">
-      <option>Dark Mode</option>
-      <option>Light Mode</option>
-      <option>Accent Mode</option>
-    </select>
+    <div>
+      <button id="desktopBtn" class="active">Desktop</button>
+      <button id="mobileBtn">Mobile</button>
+    </div>
+    <div>
+      <button id="darkBtn" class="active">Dark</button>
+      <button id="lightBtn">Light</button>
+      <button id="accentBtn">Accent</button>
+    </div>
   </header>
 
   <main>
     <div id="gallery" class="gallery"></div>
-    <div id="loading" class="loading"></div>
+    <div id="loading" class="loading">Loading blocks…</div>
   </main>
 
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      // ✅ Detect whether running locally or on GitHub Pages
+    window.addEventListener("DOMContentLoaded", async () => {
       const base = location.href.includes("block-images")
         ? `${location.origin}/block-images`
         : `${location.origin}`;
 
-      console.log("Using base:", base);
-
-      const categories = [
-        "404",
-        "About Us",
-        "Announcement Bar",
-        "Blog",
-        "CTA",
-        "Case Studies",
-        "Contact",
-        "Dashboard",
-        "FAQ",
-        "Features",
-        "Footer",
-        "Form : Survey : Quiz",
-        "Gallery",
-        "Hero",
-        "Integrations",
-        "Login",
-        "Navbar",
-        "Portfolio",
-        "Popup",
-        "Pricing",
-        "Sidebar",
-        "Signup",
-        "Slider",
-        "Social Proof",
-        "Stats",
-        "Tabs",
-        "Team",
-        "Testimonials",
-        "Timeline",
-        "Video",
-        "Workspace"
-      ];
-
-      const catSelect = document.getElementById("category");
-      const deviceSelect = document.getElementById("device");
-      const modeSelect = document.getElementById("mode");
       const gallery = document.getElementById("gallery");
       const loading = document.getElementById("loading");
-      const cache = {};
+      const buttons = {
+        device: { desktop: document.getElementById("desktopBtn"), mobile: document.getElementById("mobileBtn") },
+        mode: { dark: document.getElementById("darkBtn"), light: document.getElementById("lightBtn"), accent: document.getElementById("accentBtn") }
+      };
 
-      // Populate category dropdown
-      categories.forEach(cat => {
-        const opt = document.createElement("option");
-        opt.textContent = cat;
-        catSelect.appendChild(opt);
-      });
+      let currentDevice = "Desktop";
+      let currentMode = "Dark Mode";
 
       async function imageExists(url) {
         try {
@@ -182,59 +131,66 @@
       }
 
       async function loadImages() {
-        const category = catSelect.value;
-        const device = deviceSelect.value;
-        const mode = modeSelect.value;
-        const key = `${category}-${device}-${mode}`;
-        gallery.innerHTML = "";
         loading.textContent = "Loading blocks…";
-
-        // Cached version
-        if (cache[key]) {
-          gallery.innerHTML = cache[key];
-          loading.textContent = "";
-          return;
-        }
-
+        gallery.innerHTML = "";
+        const folder = `${base}/404/${currentDevice}/${encodeURIComponent(currentMode)}`;
         const images = [];
-        for (let i = 1; i <= 400; i++) {
-          const patterns = [
-            `${category} Blocks-${i}_result_result.webp`,
-            `${category} Blocks-${i}_result.webp`,
-            `${category} Blocks-${i}.webp`
-          ];
 
-          for (const file of patterns) {
-            const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(file)}`;
-            const exists = await imageExists(url);
-            if (exists) {
-              images.push(url);
-              break;
-            }
+        for (let i = 1; i <= 100; i++) {
+          const filename = `404%20Error%20Blocks-${i}_result_result.webp`;
+          const url = `${folder}/${filename}`;
+          if (await imageExists(url)) {
+            images.push(url);
           }
         }
 
         if (images.length === 0) {
-          gallery.innerHTML = `<p>No images found in this category/mode.</p>`;
-          loading.textContent = "";
+          loading.textContent = "No images found.";
           return;
         }
 
-        const html = images.map(src => `
-          <img src="${src}" alt="${category} block" loading="lazy">
-        `).join("");
-
-        cache[key] = html;
-        gallery.innerHTML = html;
+        gallery.innerHTML = images
+          .map(src => `<img src="${src}" loading="lazy" alt="404 block">`)
+          .join("");
         loading.textContent = "";
       }
 
-      catSelect.addEventListener("change", loadImages);
-      deviceSelect.addEventListener("change", loadImages);
-      modeSelect.addEventListener("change", loadImages);
+      function setActive(group, activeKey) {
+        for (const key in buttons[group]) {
+          buttons[group][key].classList.remove("active");
+        }
+        buttons[group][activeKey].classList.add("active");
+      }
 
-      // Initial
-      catSelect.value = "404";
+      // Event listeners
+      buttons.device.desktop.addEventListener("click", () => {
+        currentDevice = "Desktop";
+        setActive("device", "desktop");
+        loadImages();
+      });
+      buttons.device.mobile.addEventListener("click", () => {
+        currentDevice = "Mobile";
+        setActive("device", "mobile");
+        loadImages();
+      });
+
+      buttons.mode.dark.addEventListener("click", () => {
+        currentMode = "Dark Mode";
+        setActive("mode", "dark");
+        loadImages();
+      });
+      buttons.mode.light.addEventListener("click", () => {
+        currentMode = "Light Mode";
+        setActive("mode", "light");
+        loadImages();
+      });
+      buttons.mode.accent.addEventListener("click", () => {
+        currentMode = "Accent Mode";
+        setActive("mode", "accent");
+        loadImages();
+      });
+
+      // Initial load
       loadImages();
     });
   </script>
