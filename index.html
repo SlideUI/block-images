@@ -1,105 +1,111 @@
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
-    // -----------------------------------------------------------------
-    // 1. CONFIG
-    // -----------------------------------------------------------------
-    const base        = `${location.origin}/block-images`;
-    const categories  = ['404'];                 // add more later
-    const MAX_PARALLEL = 8;                     // how many <img> at once
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlideUI Block Gallery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass { backdrop-filter: blur(12px); background: rgba(15,15,15,0.7); border: 1px solid rgba(255,255,255,0.1); }
+    .spinner { width: 24px; height: 24px; border: 3px solid #333; border-top-color: #06b6d4; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gallery img { @apply w-full rounded-xl shadow-lg transition-all duration-200; }
+    .gallery img:hover { @apply scale-105 shadow-2xl; }
+  </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center">
 
-    const catSel   = document.getElementById('category');
-    const devSel   = document.getElementById('device');
-    const modeSel  = document.getElementById('mode');
-    const gallery  = document.getElementById('gallery');
-    const loading  = document.getElementById('loading');
+  <header class="glass w-full max-w-4xl mx-auto mt-6 p-5 rounded-2xl flex flex-wrap gap-3 justify-center items-center sticky top-4 z-10 shadow-xl">
+    <h1 class="text-2xl font-bold">SlideUI Blocks</h1>
+    <select id="category" class="px-4 py-2 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-cyan-500"></select>
+    <select id="device" class="px-4 py-2 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-cyan-500">
+      <option>Desktop</option>
+      <option>Mobile</option>
+    </select>
+    <select id="mode" class="px-4 py-2 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-cyan-500">
+      <option>Dark Mode</option>
+      <option>Light Mode</option>
+      <option>Accent Mode</option>
+    </select>
+  </header>
 
-    // -----------------------------------------------------------------
-    // 2. Fill category dropdown
-    // -----------------------------------------------------------------
-    categories.forEach(c => catSel.add(new Option(c, c)));
+  <main class="w-full max-w-4xl mt-8 px-4 pb-20">
+    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div id="loading" class="flex items-center justify-center py-12 text-gray-400">
+      <div class="spinner mr-3"></div>
+      <span>Loading manifest…</span>
+    </div>
+  </main>
 
-    // -----------------------------------------------------------------
-    // 3. Core loader – parallel with concurrency limit
-    // -----------------------------------------------------------------
-    async function loadImages() {
-      const cat   = catSel.value;
-      const dev   = devSel.value;      // Desktop | Mobile
-      const mode  = modeSel.value;     // Dark / Light / Accent
+  <script>
+    // CHANGE THIS LINE TO YOUR GITHUB USERNAME & REPO
+    const BASE = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/YOUR_REPO@main/block-images';
+    // Example: 'https://cdn.jsdelivr.net/gh/johndoe/slideui@main/block-images'
 
-      gallery.innerHTML = '';
-      loading.textContent = 'Preparing…';
-      loading.className   = 'loading';   // you can style a spinner here
+    const catSel = document.getElementById('category');
+    const devSel = document.getElementById('device');
+    const modeSel = document.getElementById('mode');
+    const gallery = document.getElementById('gallery');
+    const loading = document.getElementById('loading');
+    let manifest = null;
 
-      // ---- build URL list ------------------------------------------------
-      const urls = Array.from({ length: 80 }, (_, i) => {
-        const n = i + 1;
-        const file = `${cat} Error Blocks-${n}_result_result.webp`;
-        return `${base}/${cat}/${dev}/${mode}/${encodeURIComponent(file)}`;
-      });
+    async function init() {
+      try {
+        const res = await fetch(`${BASE}/manifest.json`);
+        manifest = await res.json();
 
-      let loaded = 0;
-      let failed = 0;
-      const total = urls.length;
+        Object.keys(manifest).forEach(cat => {
+          const opt = new Option(cat, cat);
+          catSel.appendChild(opt);
+        });
 
-      // ---- simple queue --------------------------------------------------
-      const queue = [...urls];
-      const active = new Set();
-
-      const tryNext = () => {
-        while (active.size < MAX_PARALLEL && queue.length) {
-          const url = queue.shift();
-          const img = new Image();
-          img.loading = 'lazy';
-          img.className = 'w-full rounded-xl shadow-lg transition-transform hover:scale-105';
-
-          const onLoad = () => {
-            loaded++;
-            gallery.appendChild(img);
-            update();
-            active.delete(img);
-            tryNext();
-          };
-          const onError = () => {
-            failed++;
-            active.delete(img);
-            tryNext();
-          };
-
-          img.onload  = onLoad;
-          img.onerror = onError;
-          img.src = url;
-          active.add(img);
-        }
-
-        // all done?
-        if (active.size === 0 && queue.length === 0) {
-          finish();
-        }
-      };
-
-      const update = () => {
-        loading.textContent = `Loaded ${loaded} / ${total} …`;
-      };
-
-      const finish = () => {
-        loading.textContent = loaded
-          ? ''
-          : 'No blocks found for this combination.';
-        loading.className = loaded ? '' : 'loading text-gray-500';
-      };
-
-      tryNext();               // start the first batch
-      setTimeout(finish, 8000); // safety-net – hide spinner after 8 s
+        catSel.value = '404';
+        loadImages();
+      } catch (e) {
+        loading.innerHTML = `<p class="text-red-400">Error: Could not load manifest.json<br>Did you upload it?</p>`;
+      }
     }
 
-    // -----------------------------------------------------------------
-    // 4. Event wiring
-    // -----------------------------------------------------------------
-    catSel.addEventListener('change', loadImages);
-    devSel.addEventListener('change', loadImages);
-    modeSel.addEventListener('change', loadImages);
+    async function loadImages() {
+      const cat = catSel.value;
+      const dev = devSel.value;
+      const mode = modeSel.value;
 
-    catSel.value = '404';
-    loadImages();
-  });
-</script>
+      if (!manifest || !manifest[cat]?.[dev]?.[mode]) {
+        gallery.innerHTML = '<p class="col-span-full text-center text-gray-500">No blocks found.</p>';
+        loading.textContent = '';
+        return;
+      }
+
+      const files = manifest[cat][dev][mode];
+      gallery.innerHTML = '';
+      loading.innerHTML = `<div class="spinner mr-3"></div><span>Loading ${files.length} blocks…</span>`;
+
+      const fragment = document.createDocumentFragment();
+      let loaded = 0;
+
+      files.forEach(file => {
+        const img = new Image();
+        img.loading = 'lazy';
+        img.className = 'w-full rounded-xl shadow-lg transition-transform hover:scale-105';
+        img.src = `${BASE}/${cat}/${dev}/${mode}/${file}`;
+        img.alt = `${cat} block`;
+
+        img.onload = () => {
+          loaded++;
+          if (loaded === files.length) loading.textContent = '';
+        };
+        fragment.appendChild(img);
+      });
+
+      gallery.appendChild(fragment);
+    }
+
+    catSel.onchange = loadImages;
+    devSel.onchange = loadImages;
+    modeSel.onchange = loadImages;
+
+    init();
+  </script>
+</body>
+</html>
