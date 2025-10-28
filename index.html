@@ -1,61 +1,105 @@
 <script>
-  window.addEventListener("DOMContentLoaded", () => {
-    const base = `${location.origin}/block-images`;
-    const categories = ["404"];
-    const catSelect = document.getElementById("category");
-    const deviceSelect = document.getElementById("device");
-    const modeSelect = document.getElementById("mode");
-    const gallery = document.getElementById("gallery");
-    const loading = document.getElementById("loading");
+  window.addEventListener('DOMContentLoaded', () => {
+    // -----------------------------------------------------------------
+    // 1. CONFIG
+    // -----------------------------------------------------------------
+    const base        = `${location.origin}/block-images`;
+    const categories  = ['404'];                 // add more later
+    const MAX_PARALLEL = 8;                     // how many <img> at once
 
-    categories.forEach(cat => {
-      const opt = document.createElement("option");
-      opt.textContent = cat;
-      catSelect.appendChild(opt);
-    });
+    const catSel   = document.getElementById('category');
+    const devSel   = document.getElementById('device');
+    const modeSel  = document.getElementById('mode');
+    const gallery  = document.getElementById('gallery');
+    const loading  = document.getElementById('loading');
 
+    // -----------------------------------------------------------------
+    // 2. Fill category dropdown
+    // -----------------------------------------------------------------
+    categories.forEach(c => catSel.add(new Option(c, c)));
+
+    // -----------------------------------------------------------------
+    // 3. Core loader – parallel with concurrency limit
+    // -----------------------------------------------------------------
     async function loadImages() {
-      const category = catSelect.value;
-      const device = deviceSelect.value;
-      const mode = modeSelect.value;
+      const cat   = catSel.value;
+      const dev   = devSel.value;      // Desktop | Mobile
+      const mode  = modeSel.value;     // Dark / Light / Accent
 
-      gallery.innerHTML = "";
-      loading.textContent = "Loading blocks…";
+      gallery.innerHTML = '';
+      loading.textContent = 'Preparing…';
+      loading.className   = 'loading';   // you can style a spinner here
 
-      // Build all URLs first
-      const urls = Array.from({ length: 80 }, (_, i) => 
-        `${base}/${category}/${device}/${mode}/${category} Error Blocks-${i + 1}_result_result.webp`
-      );
-
-      let foundCount = 0;
-      loading.textContent = "Scanning images…";
-
-      // Parallel check — load images directly, skip HEAD requests
-      urls.forEach(url => {
-        const img = new Image();
-        img.src = url;
-        img.loading = "lazy";
-        img.onerror = () => {}; // ignore missing files
-        img.onload = () => {
-          foundCount++;
-          gallery.appendChild(img);
-          loading.textContent = `Loaded ${foundCount} blocks…`;
-        };
+      // ---- build URL list ------------------------------------------------
+      const urls = Array.from({ length: 80 }, (_, i) => {
+        const n = i + 1;
+        const file = `${cat} Error Blocks-${n}_result_result.webp`;
+        return `${base}/${cat}/${dev}/${mode}/${encodeURIComponent(file)}`;
       });
 
-      // Auto-clear loading text once some images have loaded
-      setTimeout(() => {
-        loading.textContent = foundCount
-          ? ""
-          : "No images found for this mode.";
-      }, 4000);
+      let loaded = 0;
+      let failed = 0;
+      const total = urls.length;
+
+      // ---- simple queue --------------------------------------------------
+      const queue = [...urls];
+      const active = new Set();
+
+      const tryNext = () => {
+        while (active.size < MAX_PARALLEL && queue.length) {
+          const url = queue.shift();
+          const img = new Image();
+          img.loading = 'lazy';
+          img.className = 'w-full rounded-xl shadow-lg transition-transform hover:scale-105';
+
+          const onLoad = () => {
+            loaded++;
+            gallery.appendChild(img);
+            update();
+            active.delete(img);
+            tryNext();
+          };
+          const onError = () => {
+            failed++;
+            active.delete(img);
+            tryNext();
+          };
+
+          img.onload  = onLoad;
+          img.onerror = onError;
+          img.src = url;
+          active.add(img);
+        }
+
+        // all done?
+        if (active.size === 0 && queue.length === 0) {
+          finish();
+        }
+      };
+
+      const update = () => {
+        loading.textContent = `Loaded ${loaded} / ${total} …`;
+      };
+
+      const finish = () => {
+        loading.textContent = loaded
+          ? ''
+          : 'No blocks found for this combination.';
+        loading.className = loaded ? '' : 'loading text-gray-500';
+      };
+
+      tryNext();               // start the first batch
+      setTimeout(finish, 8000); // safety-net – hide spinner after 8 s
     }
 
-    catSelect.addEventListener("change", loadImages);
-    deviceSelect.addEventListener("change", loadImages);
-    modeSelect.addEventListener("change", loadImages);
+    // -----------------------------------------------------------------
+    // 4. Event wiring
+    // -----------------------------------------------------------------
+    catSel.addEventListener('change', loadImages);
+    devSel.addEventListener('change', loadImages);
+    modeSel.addEventListener('change', loadImages);
 
-    catSelect.value = "404";
+    catSel.value = '404';
     loadImages();
   });
 </script>
