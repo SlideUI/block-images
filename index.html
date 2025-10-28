@@ -117,20 +117,13 @@
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
-      // ✅ Detect correct base path (local or GitHub Pages)
-      const base = location.href.includes("block-images")
-        ? `${location.origin}/block-images`
-        : `${location.origin}`;
-
-      console.log("Using base:", base);
-
+      const base = `${location.origin}/block-images`;
       const categories = ["404"];
       const catSelect = document.getElementById("category");
       const deviceSelect = document.getElementById("device");
       const modeSelect = document.getElementById("mode");
       const gallery = document.getElementById("gallery");
       const loading = document.getElementById("loading");
-      const cache = {};
 
       // Populate category dropdown
       categories.forEach(cat => {
@@ -139,62 +132,36 @@
         catSelect.appendChild(opt);
       });
 
-      async function imageExists(url) {
-        try {
-          const res = await fetch(url, { method: "HEAD" });
-          return res.ok;
-        } catch {
-          return false;
-        }
-      }
-
       async function loadImages() {
         const category = catSelect.value;
         const device = deviceSelect.value;
         const mode = modeSelect.value;
-        const key = `${category}-${device}-${mode}`;
+
         gallery.innerHTML = "";
         loading.textContent = "Loading blocks…";
-
-        // Cached version
-        if (cache[key]) {
-          gallery.innerHTML = cache[key];
-          loading.textContent = "";
-          return;
-        }
 
         const images = [];
         for (let i = 1; i <= 80; i++) {
           const fileName = `${category} Error Blocks-${i}_result_result.webp`;
-          const encoded = encodeURIComponent(fileName);
-          const url = `${base}/${encodeURIComponent(category)}/${device}/${encodeURIComponent(mode)}/${encoded}`;
-          const exists = await imageExists(url);
-          if (exists) {
-            images.push(url);
-          }
+          const url = `${base}/${category}/${device}/${mode}/${fileName}`;
+          const res = await fetch(url, { method: "HEAD" });
+          if (res.ok) images.push(url);
         }
 
-        if (images.length === 0) {
-          gallery.innerHTML = `<p>No images found for this category/mode.</p>`;
+        if (!images.length) {
+          gallery.innerHTML = "<p>No images found for this mode.</p>";
           loading.textContent = "";
           return;
         }
 
-        const html = images
-          .map(src => `<img src="${src}" alt="${category} block" loading="lazy">`)
-          .join("");
-
-        cache[key] = html;
-        gallery.innerHTML = html;
+        gallery.innerHTML = images.map(src => `<img src="${src}" loading="lazy">`).join("");
         loading.textContent = "";
       }
 
-      // Event listeners
       catSelect.addEventListener("change", loadImages);
       deviceSelect.addEventListener("change", loadImages);
       modeSelect.addEventListener("change", loadImages);
 
-      // Default selection
       catSelect.value = "404";
       loadImages();
     });
