@@ -1,137 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SlideUI Gallery</title>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        background: #0e0e0e;
-        color: #fff;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      header {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-        padding: 20px;
-      }
-      select, button {
-        padding: 10px 16px;
-        border-radius: 6px;
-        border: none;
-        background: #1a1a1a;
-        color: white;
-        font-size: 14px;
-      }
-      button:hover, select:hover {
-        background: #333;
-        cursor: pointer;
-      }
-      .gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 12px;
-        width: 90%;
-        max-width: 1600px;
-      }
-      img {
-        width: 100%;
-        border-radius: 6px;
-        background: #1a1a1a;
-        transition: transform 0.2s ease;
-      }
-      img:hover {
-        transform: scale(1.02);
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <select id="category"></select>
-      <select id="device">
-        <option>Desktop</option>
-        <option>Mobile</option>
-      </select>
-      <select id="mode">
-        <option>Dark Mode</option>
-        <option>Light Mode</option>
-        <option>Accent Mode</option>
-      </select>
-    </header>
-    <main class="gallery" id="gallery"></main>
+<script>
+  const base = "https://slideui.github.io/block-images";
+  const api = "https://api.github.com/repos/slideui/block-images/contents";
+  const gallery = document.getElementById("gallery");
+  const catSelect = document.getElementById("category");
+  const cache = {};
 
-    <script>
-      const base = "https://slideui.github.io/block-images";
-      const gallery = document.getElementById("gallery");
-      const cache = {};
+  async function loadCategories() {
+    const res = await fetch(api);
+    const data = await res.json();
+    const folders = data.filter(item => item.type === "dir").map(item => item.name);
+    catSelect.innerHTML = "";
+    folders.forEach(name => {
+      const opt = document.createElement("option");
+      opt.textContent = name;
+      catSelect.appendChild(opt);
+    });
+    catSelect.value = "404";
+  }
 
-      const categories = [
-        "404",
-        "About Us",
-        "Announcement Bar",
-        "Blog",
-        "CTA",
-        "Contact",
-        "Dashboard",
-        "Features",
-        "Footer",
-        "Gallery",
-        "Hero",
-        "Login",
-        "Navbar",
-        "Portfolio",
-        "Pricing",
-        "Stats",
-        "Team",
-        "Testimonials"
-      ];
+  async function loadImages() {
+    const category = catSelect.value;
+    const device = document.getElementById("device").value;
+    const mode = document.getElementById("mode").value;
+    const key = `${category}-${device}-${mode}`;
+    gallery.innerHTML = "<p>Loading…</p>";
 
-      const catSelect = document.getElementById("category");
-      categories.forEach(cat => {
-        const opt = document.createElement("option");
-        opt.textContent = cat;
-        catSelect.appendChild(opt);
-      });
+    if (cache[key]) {
+      gallery.innerHTML = cache[key];
+      return;
+    }
 
-      async function loadImages() {
-        const category = catSelect.value;
-        const device = document.getElementById("device").value;
-        const mode = document.getElementById("mode").value;
-        const key = `${category}-${device}-${mode}`;
-        gallery.innerHTML = "Loading…";
+    const images = [];
+    for (let i = 1; i <= 400; i++) {
+      const filename = `${category} Blocks-${i}_result_result.webp`;
+      const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(filename)}`;
+      const res = await fetch(url, { method: "HEAD" });
+      if (res.ok) images.push(url);
+    }
 
-        if (cache[key]) {
-          gallery.innerHTML = cache[key];
-          return;
-        }
+    const html = images
+      .map(src => `<img src="${src}" loading="lazy" alt="${category}" />`)
+      .join("");
+    cache[key] = html;
+    gallery.innerHTML = html || "No images found.";
+  }
 
-        const images = [];
-        for (let i = 1; i <= 200; i++) {
-          const filename = `${category} Blocks-${i}_result.webp`;
-          const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(filename)}`;
-          const res = await fetch(url, { method: "HEAD" });
-          if (res.ok) images.push(url);
-        }
+  async function init() {
+    await loadCategories();
+    loadImages();
+  }
 
-        const html = images
-          .map(src => `<img src="${src}" loading="lazy" alt="${category}" />`)
-          .join("");
-        cache[key] = html;
-        gallery.innerHTML = html || "No images found.";
-      }
+  document.getElementById("device").addEventListener("change", loadImages);
+  document.getElementById("mode").addEventListener("change", loadImages);
+  catSelect.addEventListener("change", loadImages);
 
-      catSelect.value = "404";
-      loadImages();
-      catSelect.addEventListener("change", loadImages);
-      document.getElementById("device").addEventListener("change", loadImages);
-      document.getElementById("mode").addEventListener("change", loadImages);
-    </script>
-  </body>
-</html>
+  init();
+</script>
