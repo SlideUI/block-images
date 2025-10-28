@@ -1,6 +1,4 @@
-<div class="gallery" id="gallery"></div>
-
-<script>
+const encode = str => encodeURIComponent(str);
 const folders = [
   "404",
   "About Us",
@@ -27,13 +25,12 @@ const folders = [
   "Menu–Nav",
   "Miscellaneous",
 ];
-
 const modes = ["Desktop/Light Mode", "Desktop/Dark Mode", "Desktop/Accent Mode"];
 const gallery = document.getElementById("gallery");
 
 folders.forEach(folder => {
   modes.forEach(mode => {
-    const imgPath = `${folder}/${mode}/hero.jpg`;
+    const imgPath = `${encode(folder)}/${encode(mode)}/hero.jpg`;
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -41,9 +38,7 @@ folders.forEach(folder => {
       <div class="card-info">
         <h3>${folder}</h3>
         <span>${mode}</span>
-      </div>
-    `;
+      </div>`;
     gallery.appendChild(card);
   });
 });
-</script>
