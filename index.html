@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlideUI Blocks Gallery</title>
+  <style>
+    :root {
+      --accent: #266cff;
+      --bg: #f8f9fb;
+      --text: #111;
+      --card-bg: #fff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    }
+    header {
+      text-align: center;
+      padding: 60px 20px 30px;
+    }
+    h1 {
+      font-size: 2.4rem;
+      margin: 0;
+      font-weight: 700;
+    }
+    p.subtitle {
+      color: #666;
+      font-size: 1.1rem;
+      margin-top: 10px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+      max-width: 1600px;
+      margin: auto;
+      padding: 40px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .card img {
+      width: 100%;
+      display: block;
+    }
+    .card-info {
+      padding: 16px 20px;
+    }
+    .card-info h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .card-info span {
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SlideUI Block Gallery</h1>
+    <p class="subtitle">17,000+ connected layouts built for speed & precision</p>
+  </header>
+
+  <div class="gallery">
+    <div class="card">
+      <img src="hero.jpg" alt="Hero Layout" />
+      <div class="card-info">
+        <h3>Hero – Split Layout</h3>
+        <span>Hero Section</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="pricing.jpg" alt="Pricing Layout" />
+      <div class="card-info">
+        <h3>Pricing – 3 Columns</h3>
+        <span>Pricing</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="testimonial.jpg" alt="Testimonial Layout" />
+      <div class="card-info">
+        <h3>Testimonials – Grid</h3>
+        <span>Social Proof</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
