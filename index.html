@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>404 Block Gallery</title>
+  <title>404 Gallery</title>
   <style>
     body {
       background-color: #0e0e0e;
@@ -18,7 +18,16 @@
 
     h1 {
       font-size: 28px;
-      margin: 24px 0 10px;
+      margin-top: 24px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    p.sub {
+      color: #9f9f9f;
+      font-size: 14px;
+      margin-top: 0;
+      margin-bottom: 24px;
       text-align: center;
     }
 
@@ -36,19 +45,18 @@
       border-radius: 12px;
     }
 
-    button {
-      background: #1a1a1a;
-      border: none;
+    select {
+      padding: 10px 16px;
       border-radius: 6px;
+      border: none;
+      background: #1a1a1a;
       color: white;
-      padding: 10px 18px;
       font-size: 14px;
-      cursor: pointer;
     }
 
-    button.active {
+    select:hover {
       background: #333;
-      font-weight: 600;
+      cursor: pointer;
     }
 
     main {
@@ -87,17 +95,18 @@
 </head>
 <body>
   <h1>404 Error Blocks</h1>
+  <p class="sub">Browse Desktop or Mobile modes directly from folders</p>
 
   <header>
-    <div>
-      <button id="desktopBtn" class="active">Desktop</button>
-      <button id="mobileBtn">Mobile</button>
-    </div>
-    <div>
-      <button id="darkBtn" class="active">Dark</button>
-      <button id="lightBtn">Light</button>
-      <button id="accentBtn">Accent</button>
-    </div>
+    <select id="device">
+      <option>Desktop</option>
+      <option>Mobile</option>
+    </select>
+    <select id="mode">
+      <option>Dark Mode</option>
+      <option>Light Mode</option>
+      <option>Accent Mode</option>
+    </select>
   </header>
 
   <main>
@@ -107,19 +116,15 @@
 
   <script>
     window.addEventListener("DOMContentLoaded", async () => {
+      // Detect base path automatically
       const base = location.href.includes("block-images")
         ? `${location.origin}/block-images`
         : `${location.origin}`;
 
       const gallery = document.getElementById("gallery");
       const loading = document.getElementById("loading");
-      const buttons = {
-        device: { desktop: document.getElementById("desktopBtn"), mobile: document.getElementById("mobileBtn") },
-        mode: { dark: document.getElementById("darkBtn"), light: document.getElementById("lightBtn"), accent: document.getElementById("accentBtn") }
-      };
-
-      let currentDevice = "Desktop";
-      let currentMode = "Dark Mode";
+      const deviceSelect = document.getElementById("device");
+      const modeSelect = document.getElementById("mode");
 
       async function imageExists(url) {
         try {
@@ -131,67 +136,36 @@
       }
 
       async function loadImages() {
-        loading.textContent = "Loading blocks…";
-        gallery.innerHTML = "";
-        const folder = `${base}/404/${currentDevice}/${encodeURIComponent(currentMode)}`;
+        const device = deviceSelect.value;
+        const mode = modeSelect.value;
+        const folder = `${base}/404/${device}/${encodeURIComponent(mode)}`;
         const images = [];
 
+        gallery.innerHTML = "";
+        loading.textContent = "Loading blocks…";
+
         for (let i = 1; i <= 100; i++) {
-          const filename = `404%20Error%20Blocks-${i}_result_result.webp`;
-          const url = `${folder}/${filename}`;
+          const file = `404%20Error%20Blocks-${i}_result_result.webp`;
+          const url = `${folder}/${file}`;
           if (await imageExists(url)) {
             images.push(url);
           }
         }
 
         if (images.length === 0) {
-          loading.textContent = "No images found.";
+          gallery.innerHTML = `<p>No images found.</p>`;
+          loading.textContent = "";
           return;
         }
 
-        gallery.innerHTML = images
-          .map(src => `<img src="${src}" loading="lazy" alt="404 block">`)
-          .join("");
+        gallery.innerHTML = images.map(src => `<img src="${src}" loading="lazy" alt="404 block">`).join("");
         loading.textContent = "";
       }
 
-      function setActive(group, activeKey) {
-        for (const key in buttons[group]) {
-          buttons[group][key].classList.remove("active");
-        }
-        buttons[group][activeKey].classList.add("active");
-      }
+      deviceSelect.addEventListener("change", loadImages);
+      modeSelect.addEventListener("change", loadImages);
 
-      // Event listeners
-      buttons.device.desktop.addEventListener("click", () => {
-        currentDevice = "Desktop";
-        setActive("device", "desktop");
-        loadImages();
-      });
-      buttons.device.mobile.addEventListener("click", () => {
-        currentDevice = "Mobile";
-        setActive("device", "mobile");
-        loadImages();
-      });
-
-      buttons.mode.dark.addEventListener("click", () => {
-        currentMode = "Dark Mode";
-        setActive("mode", "dark");
-        loadImages();
-      });
-      buttons.mode.light.addEventListener("click", () => {
-        currentMode = "Light Mode";
-        setActive("mode", "light");
-        loadImages();
-      });
-      buttons.mode.accent.addEventListener("click", () => {
-        currentMode = "Accent Mode";
-        setActive("mode", "accent");
-        loadImages();
-      });
-
-      // Initial load
-      loadImages();
+      await loadImages(); // initial
     });
   </script>
 </body>
