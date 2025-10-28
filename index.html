@@ -43,6 +43,12 @@
       cursor: pointer;
     }
 
+    h1 {
+      font-size: 28px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
     main {
       width: 95%;
       max-width: 1600px;
@@ -75,6 +81,8 @@
   </style>
 </head>
 <body>
+  <h1>Visual Block Gallery</h1>
+
   <header>
     <select id="category"></select>
     <select id="device">
@@ -94,107 +102,118 @@
   </main>
 
   <script>
-    const base = "https://slideui.github.io/block-images";
-    const categories = [
-      "404",
-      "About Us",
-      "Announcement Bar",
-      "Blog",
-      "CTA",
-      "Case Studies",
-      "Contact",
-      "Dashboard",
-      "FAQ",
-      "Features",
-      "Footer",
-      "Form : Survey : Quiz",
-      "Gallery",
-      "Hero",
-      "Integrations",
-      "Login",
-      "Navbar",
-      "Portfolio",
-      "Popup",
-      "Pricing",
-      "Sidebar",
-      "Signup",
-      "Slider",
-      "Social Proof",
-      "Stats",
-      "Tabs",
-      "Team",
-      "Testimonials",
-      "Timeline",
-      "Video",
-      "Workspace"
-    ];
+    window.addEventListener("DOMContentLoaded", () => {
+      // ✅ Detect whether running on GitHub Pages or locally
+      const base = location.hostname.includes("github.io")
+        ? `${location.origin}/block-images`
+        : "https://slideui.github.io/block-images";
 
-    const catSelect = document.getElementById("category");
-    const gallery = document.getElementById("gallery");
-    const loading = document.getElementById("loading");
-    const cache = {};
+      const categories = [
+        "404",
+        "About Us",
+        "Announcement Bar",
+        "Blog",
+        "CTA",
+        "Case Studies",
+        "Contact",
+        "Dashboard",
+        "FAQ",
+        "Features",
+        "Footer",
+        "Form : Survey : Quiz",
+        "Gallery",
+        "Hero",
+        "Integrations",
+        "Login",
+        "Navbar",
+        "Portfolio",
+        "Popup",
+        "Pricing",
+        "Sidebar",
+        "Signup",
+        "Slider",
+        "Social Proof",
+        "Stats",
+        "Tabs",
+        "Team",
+        "Testimonials",
+        "Timeline",
+        "Video",
+        "Workspace"
+      ];
 
-    // Populate category dropdown
-    categories.forEach(cat => {
-      const opt = document.createElement("option");
-      opt.textContent = cat;
-      catSelect.appendChild(opt);
-    });
+      const catSelect = document.getElementById("category");
+      const gallery = document.getElementById("gallery");
+      const loading = document.getElementById("loading");
+      const cache = {};
 
-    async function imageExists(url) {
-      const res = await fetch(url, { method: "HEAD" });
-      return res.ok;
-    }
+      // Populate category dropdown
+      categories.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+      });
 
-    async function loadImages() {
-      const category = catSelect.value;
-      const device = document.getElementById("device").value;
-      const mode = document.getElementById("mode").value;
-      const key = `${category}-${device}-${mode}`;
-      gallery.innerHTML = "";
-      loading.textContent = "Loading blocks…";
-
-      // Use cache if exists
-      if (cache[key]) {
-        gallery.innerHTML = cache[key];
-        loading.textContent = "";
-        return;
-      }
-
-      const images = [];
-      // Try up to 300 images per folder
-      for (let i = 1; i <= 300; i++) {
-        const patterns = [
-          `${category} Blocks-${i}_result_result.webp`,
-          `${category} Blocks-${i}_result.webp`,
-          `${category} Blocks-${i}.webp`
-        ];
-        for (const name of patterns) {
-          const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(name)}`;
-          if (await imageExists(url)) {
-            images.push(url);
-            break;
-          }
+      async function imageExists(url) {
+        try {
+          const res = await fetch(url, { method: "HEAD" });
+          return res.ok;
+        } catch {
+          return false;
         }
       }
 
-      const html = images
-        .map(src => `<img src="${src}" loading="lazy" alt="${category} block" />`)
-        .join("");
+      async function loadImages() {
+        const category = catSelect.value;
+        const device = document.getElementById("device").value;
+        const mode = document.getElementById("mode").value;
+        const key = `${category}-${device}-${mode}`;
+        gallery.innerHTML = "";
+        loading.textContent = "Loading blocks…";
 
-      cache[key] = html;
-      gallery.innerHTML = html || "<p>No images found in this mode.</p>";
-      loading.textContent = "";
-    }
+        // Use cache if exists
+        if (cache[key]) {
+          gallery.innerHTML = cache[key];
+          loading.textContent = "";
+          return;
+        }
 
-    // Event listeners
-    catSelect.addEventListener("change", loadImages);
-    document.getElementById("device").addEventListener("change", loadImages);
-    document.getElementById("mode").addEventListener("change", loadImages);
+        const images = [];
+        for (let i = 1; i <= 300; i++) {
+          const patterns = [
+            `${category} Blocks-${i}_result_result.webp`,
+            `${category} Blocks-${i}_result.webp`,
+            `${category} Blocks-${i}.webp`
+          ];
 
-    // Init
-    catSelect.value = "404";
-    loadImages();
+          for (const name of patterns) {
+            const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(name)}`;
+            const exists = await imageExists(url);
+            if (exists) {
+              images.push(url);
+              break;
+            }
+          }
+        }
+
+        const html = images
+          .map(src => `<img src="${src}" loading="lazy" alt="${category} block" />`)
+          .join("");
+
+        cache[key] = html;
+        gallery.innerHTML = html || "<p>No images found in this mode.</p>";
+        loading.textContent = "";
+      }
+
+      // Event listeners
+      catSelect.addEventListener("change", loadImages);
+      document.getElementById("device").addEventListener("change", loadImages);
+      document.getElementById("mode").addEventListener("change", loadImages);
+
+      // Init
+      catSelect.value = "404";
+      loadImages();
+    });
   </script>
 </body>
 </html>
