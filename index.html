@@ -4,256 +4,182 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SlideUI Block Gallery</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #0f1117;
-      --card: #1a1d29;
-      --border: rgba(255,255,255,0.07);
-      --text-primary: #fff;
-      --text-dim: rgba(255,255,255,0.6);
-      --pill-bg: rgba(255,255,255,0.08);
-    }
-
-    * { box-sizing: border-box; margin: 0; -webkit-font-smoothing: antialiased; }
-
     body {
-      background-color: var(--bg);
-      color: var(--text-primary);
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background-color: #0e0e11;
+      color: #fff;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
+      align-items: center;
     }
 
     header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid var(--border);
-      background-color: var(--card);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    }
-
-    .header-inner {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 16px 24px;
+      background: #141418;
+      width: 100%;
+      padding: 16px 32px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      box-sizing: border-box;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    header h1 {
+      font-size: 18px;
+      margin-left: 12px;
     }
 
-    .brand-icon {
-      height: 40px;
-      width: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg,#4f46e5 0%,#9333ea 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    header span {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 48px auto;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 15px;
+      opacity: 0.7;
+      margin-bottom: 32px;
+    }
+
+    select, button {
+      background: #1e1e25;
       color: #fff;
-      font-weight: 600;
+      border: 1px solid #333;
+      padding: 10px 16px;
+      border-radius: 6px;
       font-size: 14px;
+      margin: 0 6px;
     }
 
-    .brand-text h1 { font-size: 16px; font-weight: 600; color: var(--text-primary); }
-    .brand-text p { font-size: 12px; color: var(--text-dim); }
-
-    main {
-      flex: 1;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-    }
-
-    .intro { text-align: center; max-width: 720px; margin: 0 auto 48px; }
-    .intro h2 { font-size: clamp(2rem, 1vw + 1rem, 2.75rem); font-weight: 600; margin-bottom: 16px; }
-    .intro p { font-size: 16px; color: var(--text-dim); }
-
-    .controls { text-align: center; margin-bottom: 32px; }
-    select {
-      background: var(--card);
-      color: var(--text-primary);
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin: 0 8px;
-    }
     button {
-      background: #4f46e5;
-      color: #fff;
-      border: 0;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: 500;
+      background: #5b4dff;
       cursor: pointer;
       transition: background 0.2s ease;
     }
-    button:hover { background: #6d5dfc; }
 
-    .grid {
+    button:hover {
+      background: #7065ff;
+    }
+
+    .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 24px;
+      margin-top: 40px;
+      padding: 0 20px;
     }
 
-    .card {
-      background-color: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .thumb {
-      background-color: #0f172a;
+    .block {
+      background: #16161a;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-      aspect-ratio: 16 / 10;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-    .card-meta { display: flex; justify-content: space-between; margin-top: 16px; }
-    .card-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
-    .card-cat { font-size: 12px; color: var(--text-dim); }
-    .pill {
-      background-color: var(--pill-bg);
-      color: var(--text-primary);
-      font-size: 11px;
-      font-weight: 500;
-      line-height: 1.2;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    footer {
-      border-top: 1px solid var(--border);
-      background-color: var(--card);
-      padding: 32px 24px;
-      text-align: center;
+    .block img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      background: #0e0e11;
+    }
+
+    .block-info {
+      padding: 16px;
+      text-align: left;
+    }
+
+    .block-info h3 {
+      font-size: 15px;
+      margin: 0;
+    }
+
+    .block-info span {
       font-size: 13px;
-      color: var(--text-dim);
-    }
-
-    @media (hover:hover) {
-      .card:hover { box-shadow: 0 30px 80px rgba(0,0,0,0.9); transform: translateY(-1px); transition: all 0.12s ease; }
+      opacity: 0.6;
     }
   </style>
 </head>
-
 <body>
   <header>
-    <div class="header-inner">
-      <div class="brand">
-        <div class="brand-icon">UI</div>
-        <div class="brand-text">
-          <h1>SlideUI Block Gallery</h1>
-          <p>Component Library</p>
-        </div>
-      </div>
+    <img src="https://slideui.github.io/assets/ui-icon.png" width="36" height="36" alt="UI" />
+    <div style="margin-left: 12px;">
+      <h1>SlideUI Block Gallery</h1>
+      <span>Component Library</span>
     </div>
   </header>
 
-  <main>
-    <section class="intro">
-      <h2>Visual Block Gallery</h2>
-      <p>Browse all exported SlideUI block screenshots directly from your GitHub repo.</p>
-    </section>
+  <div class="container">
+    <h2>Visual Block Gallery</h2>
+    <p>Browse all exported SlideUI block screenshots directly from your GitHub repo.</p>
 
-    <div class="controls">
-      <label>Category:</label>
+    <div style="margin-bottom: 20px;">
+      Category:
       <select id="category">
         <option value="404">404</option>
         <option value="Hero">Hero</option>
-        <option value="Features">Features</option>
-        <option value="Pricing Plan">Pricing Plan</option>
-        <option value="Testimonials">Testimonials</option>
-        <option value="About Us">About Us</option>
+        <option value="About">About</option>
+        <option value="Contact">Contact</option>
       </select>
-
-      <label>Device:</label>
+      Device:
       <select id="device">
         <option value="Desktop">Desktop</option>
         <option value="Mobile">Mobile</option>
       </select>
-
-      <label>Mode:</label>
+      Mode:
       <select id="mode">
-        <option value="Dark Mode">Dark</option>
-        <option value="Light Mode">Light</option>
-        <option value="Accent Mode">Accent</option>
+        <option value="Light Mode">Light Mode</option>
+        <option value="Dark Mode">Dark Mode</option>
+        <option value="Accent Mode">Accent Mode</option>
       </select>
-
-      <button onclick="loadGallery()">Load</button>
+      <button onclick="loadImages()">Load</button>
     </div>
 
-    <section class="grid" id="gallery"></section>
-  </main>
-
-  <footer>© SlideUI — Auto-generated block preview gallery</footer>
+    <div id="gallery" class="gallery"></div>
+  </div>
 
   <script>
-    async function loadGallery() {
-      const gallery = document.getElementById('gallery');
-      gallery.innerHTML = '<p style="text-align:center;color:#888;">Loading...</p>';
-
+    async function loadImages() {
       const category = document.getElementById('category').value;
       const device = document.getElementById('device').value;
       const mode = document.getElementById('mode').value;
-      const repo = 'block-images';
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = '';
 
-      const safeCategory = encodeURIComponent(category);
-      const safeDevice = encodeURIComponent(device);
-      const safeMode = encodeURIComponent(mode);
-      const basePath = `https://slideui.github.io/${repo}/${safeCategory}/${safeDevice}/${safeMode}/`;
+      // Adjust number of images per category
+      const imageCount = 10; // Change if you have more/less
 
-      const maxImages = 80;
-      let html = '';
+      for (let i = 1; i <= imageCount; i++) {
+        const fileName = `${category} Blocks-${i}_result_result.webp`;
+        const encodedMode = encodeURIComponent(mode);
+        const imageUrl = `https://slideui.github.io/block-images/${category}/${device}/${encodedMode}/${fileName}`;
 
-      for (let i = 1; i <= maxImages; i++) {
-        // 👇 Key fix: includes “Error” keyword for 404 blocks
-        const filename =
-          category === '404'
-            ? `${category} Error Blocks-${i}_result_result.webp`
-            : `${category} Blocks-${i}_result_result.webp`;
-
-        const imgURL = basePath + encodeURIComponent(filename);
-        html += `
-          <article class="card">
-            <div class="thumb">
-              <img src="${imgURL}" alt="${category} ${device} ${i}" loading="lazy"
-                   onerror="this.parentElement.parentElement.style.display='none'">
-            </div>
-            <div class="card-meta">
-              <div>
-                <div class="card-title">${category} ${device} Block ${i}</div>
-                <div class="card-cat">${mode}</div>
-              </div>
-              <div class="pill">#${i}</div>
-            </div>
-          </article>
+        const block = document.createElement('div');
+        block.className = 'block';
+        block.innerHTML = `
+          <img src="${imageUrl}" alt="${category} ${i}" onerror="this.style.display='none'">
+          <div class="block-info">
+            <h3>${category} Block ${i}</h3>
+            <span>${mode}</span>
+          </div>
         `;
+        gallery.appendChild(block);
       }
-
-      gallery.innerHTML = html;
     }
-
-    loadGallery();
   </script>
 </body>
 </html>
