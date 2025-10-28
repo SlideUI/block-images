@@ -16,17 +16,33 @@
       align-items: center;
     }
 
+    h1 {
+      font-size: 28px;
+      margin-top: 24px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    p.sub {
+      color: #9f9f9f;
+      font-size: 14px;
+      margin-top: 0;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
     header {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
       padding: 20px;
+      background: #111;
       position: sticky;
       top: 0;
-      background: #111;
       z-index: 10;
-      box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+      border-radius: 12px;
     }
 
     select {
@@ -43,12 +59,6 @@
       cursor: pointer;
     }
 
-    h1 {
-      font-size: 28px;
-      margin-top: 20px;
-      text-align: center;
-    }
-
     main {
       width: 95%;
       max-width: 1600px;
@@ -57,19 +67,22 @@
 
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      justify-items: center;
     }
 
     .gallery img {
       width: 100%;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #1a1a1a;
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
     }
 
     .gallery img:hover {
       transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(255,255,255,0.08);
     }
 
     .loading {
@@ -82,6 +95,7 @@
 </head>
 <body>
   <h1>Visual Block Gallery</h1>
+  <p class="sub">Browse all exported SlideUI blocks directly from GitHub</p>
 
   <header>
     <select id="category"></select>
@@ -103,10 +117,12 @@
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
-      // ✅ Detect whether running on GitHub Pages or locally
-      const base = location.hostname.includes("github.io")
+      // ✅ Detect whether running locally or on GitHub Pages
+      const base = location.href.includes("block-images")
         ? `${location.origin}/block-images`
-        : "https://slideui.github.io/block-images";
+        : `${location.origin}`;
+
+      console.log("Using base:", base);
 
       const categories = [
         "404",
@@ -143,6 +159,8 @@
       ];
 
       const catSelect = document.getElementById("category");
+      const deviceSelect = document.getElementById("device");
+      const modeSelect = document.getElementById("mode");
       const gallery = document.getElementById("gallery");
       const loading = document.getElementById("loading");
       const cache = {};
@@ -165,13 +183,13 @@
 
       async function loadImages() {
         const category = catSelect.value;
-        const device = document.getElementById("device").value;
-        const mode = document.getElementById("mode").value;
+        const device = deviceSelect.value;
+        const mode = modeSelect.value;
         const key = `${category}-${device}-${mode}`;
         gallery.innerHTML = "";
         loading.textContent = "Loading blocks…";
 
-        // Use cache if exists
+        // Cached version
         if (cache[key]) {
           gallery.innerHTML = cache[key];
           loading.textContent = "";
@@ -179,15 +197,15 @@
         }
 
         const images = [];
-        for (let i = 1; i <= 300; i++) {
+        for (let i = 1; i <= 400; i++) {
           const patterns = [
             `${category} Blocks-${i}_result_result.webp`,
             `${category} Blocks-${i}_result.webp`,
             `${category} Blocks-${i}.webp`
           ];
 
-          for (const name of patterns) {
-            const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(name)}`;
+          for (const file of patterns) {
+            const url = `${base}/${encodeURIComponent(category)}/${device}/${mode}/${encodeURIComponent(file)}`;
             const exists = await imageExists(url);
             if (exists) {
               images.push(url);
@@ -196,21 +214,26 @@
           }
         }
 
-        const html = images
-          .map(src => `<img src="${src}" loading="lazy" alt="${category} block" />`)
-          .join("");
+        if (images.length === 0) {
+          gallery.innerHTML = `<p>No images found in this category/mode.</p>`;
+          loading.textContent = "";
+          return;
+        }
+
+        const html = images.map(src => `
+          <img src="${src}" alt="${category} block" loading="lazy">
+        `).join("");
 
         cache[key] = html;
-        gallery.innerHTML = html || "<p>No images found in this mode.</p>";
+        gallery.innerHTML = html;
         loading.textContent = "";
       }
 
-      // Event listeners
       catSelect.addEventListener("change", loadImages);
-      document.getElementById("device").addEventListener("change", loadImages);
-      document.getElementById("mode").addEventListener("change", loadImages);
+      deviceSelect.addEventListener("change", loadImages);
+      modeSelect.addEventListener("change", loadImages);
 
-      // Init
+      // Initial
       catSelect.value = "404";
       loadImages();
     });
